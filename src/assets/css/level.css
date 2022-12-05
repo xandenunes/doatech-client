@@ -1,0 +1,12 @@
+.level{
+    height: 20px;
+    border-radius: 8px;
+    width: 102px;
+    border: 1px solid rgb(92, 92, 92);
+}
+.exp{
+    background-color: rgb(113, 255, 108);
+    height: 18px;
+    border-bottom: 7px solid rgb(38, 211, 32);
+    border-radius: 8px;
+}

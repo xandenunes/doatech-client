@@ -1,0 +1,33 @@
+.lixos{
+    align-items: center;
+    justify-content: center;
+}
+.publish{
+    display: flex;
+    flex-direction: row;
+
+}
+.title{
+    color: rgba(0, 0, 0, 0.993);
+    font-size: 15px;
+    font-weight: inherit;
+}
+
+
+.publish-info{
+    margin-left: 20px;
+}
+.value{
+    font-weight: bold;
+    color: #58D68D;
+}
+.img-public{
+    height: 90px;
+    max-width: 90px;
+    margin-bottom: 15px;
+    border: 1px solid rgba(0, 0, 0, 0.199);
+}
+.data{
+    color: rgb(88, 88, 88);
+    font-size: 12px;
+}
