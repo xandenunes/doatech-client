@@ -40,6 +40,7 @@ function Published(props){
     const [nome, setNome] = useState()
     const [telefone, setTelefone] = useState()
     const [verific, setVerific] = useState(false)
+    const [usuario, setUsuario] = useState();
    
     //Verificar qual id
     useEffect(() => {
@@ -54,6 +55,7 @@ function Published(props){
                 setPublicacao(response.data)
                 setNome(response.data.usuario.pessoa.nome)
                 setTelefone(response.data.usuario.pessoa.telefone)
+                setUsuario(response.data.usuario.email)
             })
             .catch(e => {
                 console.log(e)
@@ -118,6 +120,8 @@ function Published(props){
                                             <h5 >Descrição</h5>
                                             <p className="descrip">{publicacao.descricao}</p>
                                             <p>Categoria: {publicacao.categoria.descricao}</p>
+                                            <p>Preço: {publicacao.preco.toFixed(2)}</p>
+                                            <p>Quantidade: {publicacao.quantidade}</p>
                                         </CardBody>
                                     </Row>
                                     <CardFooter>
@@ -158,7 +162,7 @@ function Published(props){
                                 <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" fill="currentColor" class="bi bi-envelope-fill" viewBox="0 1 18 15">
                                     <path d="M.05 3.555A2 2 0 0 1 2 2h12a2 2 0 0 1 1.95 1.555L8 8.414.05 3.555zM0 4.697v7.104l5.803-3.558L0 4.697zM6.761 8.83l-6.57 4.027A2 2 0 0 0 2 14h12a2 2 0 0 0 1.808-1.144l-6.57-4.027L8 9.586l-1.239-.757zm3.436-.586L16 11.801V4.697l-5.803 3.546z"/>
                                 </svg>
-                                E-mail: {publicacao.usuario.email}
+                                E-mail: {usuario}
                             </p>
                             <Button id="bt" onClick={toggle} color="danger">Fechar</Button>
                     </ModalBody>

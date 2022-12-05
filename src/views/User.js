@@ -1,21 +1,3 @@
-/*!
-
-=========================================================
-* Paper Dashboard React - v1.3.0
-=========================================================
-
-* Product Page: https://www.creative-tim.com/product/paper-dashboard-react
-* Copyright 2021 Creative Tim (https://www.creative-tim.com)
-
-* Licensed under MIT (https://github.com/creativetimofficial/paper-dashboard-react/blob/main/LICENSE.md)
-
-* Coded by Creative Tim
-
-=========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-*/
 import React, { useContext, useEffect, useLayoutEffect, useState } from "react";
 import { Link } from "react-router-dom";
 // reactstrap components
@@ -43,23 +25,25 @@ import { PublicacoesContext } from "context/PublicacoesContext";
 function User() {
 
   useLayoutEffect(() => {
+    obtercategoria()
     obterUsuario()
-    categoria()
+    obterListaProduto(usuario.usr_id_usuario)
   }, [])
 
   const [usuario, setUsuario] = useState(JSON.parse(localStorage.getItem('dados')))
   const [modal, setModal] = useState(false);
+  const [produtos, setProdutos] = useState([]);
   const [materialPublicado, setMaterialPublicado] = useState('')
   const [publish, setPublish] = useContext(PublicacoesContext)
   const [cor, setCor] = useState([])
   const [pessoa, setPessoa] = useState([])
 
-  const cors = [
-    { id: 3, name: "perifericos", cor: "#EC7063" },
-    { id: 1, name: "acessorios", cor: "#283747" },
-    { id: 2, name: "peças", cor: "#F7DC6F" },
-]
-  const categoria = () =>{
+//   const cors = [
+//     { id: 3, name: "perifericos", cor: "#EC7063" },
+//     { id: 1, name: "acessorios", cor: "#283747" },
+//     { id: 2, name: "peças", cor: "#F7DC6F" },
+// ]
+  const obtercategoria = () =>{
     ServerRest.getAllLixos().
     then(response =>{
         setCor(response.data)
@@ -68,16 +52,16 @@ function User() {
     })
   }
   const pegarCor = (item) => {
-    for (let index = 0; index < cors.length; index++) {
-      if (cors[index].name == item.material.titulo_material) {
-        return cors[index].cor
+    for (let index = 0; index < cor.length; index++) {
+      if (cor[index].cat_id_categoria == item.categoria.cat_id_categoria) {
+        return cor[index].cor
       }
     }
   }
 
   const atualizarPublish = (publicacao)=>{
     var temporaria = publish.map((item)=>{
-      if (item.idmaterial_publicado == publicacao.idmaterial_publicado){
+      if (item.prd_id_produto == publicacao.prd_id_produto){
         return publicacao;
       } else{
         return item;
@@ -90,25 +74,23 @@ function User() {
   // Deletando publicação filtrando por id.
   const deletarPublish = (publicacao) =>{
     var temporaria = publish.filter((item)=>{
-      return item.idmaterial_publicado != publicacao.idmaterial_publicado;
+      return item.prd_id_produto != publicacao.prd_id_produto;
     })
     setPublish(temporaria);
   }
 
-  // const listaPublicacoes = usuario.publicacoes.map((publicacao) => {
-  //   const material = {
-  //     idmaterial_publicado: publicacao.idmaterial_publicado,
-  //     imgURL: publicacao.imgURL,
-  //     titulo: publicacao.titulo,
-  //     descricao: publicacao.descricao,
-  //     telefone: publicacao.telefone,
-  //     status: publicacao.status,
-  //     material: publicacao.material,
-  //     data: publicacao.data,
-  //     usuario: { idusuario: usuario.idusuario }
-  //   }
-  //   return material
-  // })
+  const listaPublicacoes = produtos.map((publicacao) => {
+    const material = {
+      prd_id_produto: publicacao.prd_id_produto,
+      titulo: publicacao.titulo,
+      descricao: publicacao.descricao,
+      quantidade: publicacao.quantidade,
+      preco: publicacao.preco,
+      categoria: { cat_id_categoria: publicacao.categoria.cat_id_categoria },
+      usuario: {usr_id_usuario: JSON.parse(localStorage.getItem('dados')).usr_id_usuario}
+    }
+    return material
+  })
 
   const obterUsuario = () => {
     ServerRest.getUsuarios(usuario.usr_id_usuario)
@@ -120,9 +102,17 @@ function User() {
       .catch(e => { console.log("Erro ao obter usuario."); })
   }
 
+  const obterListaProduto = (user) => {
+    ServerRest.getListaProdutos(user)
+      .then(response => {
+        setProdutos(response.data)
+      })
+      .catch(e => { console.log("Erro ao obter lista."); })
+  }
+
   const removerPublicacao = (item) => {
     if (window.confirm("Deseja realmente apagar a publicação?")) {
-      ServerRest.removePublicacao(item.idmaterial_publicado)
+      ServerRest.removePublicacao(item.prd_id_produto)
         .then(response => {
           obterUsuario()
           window.alert("Exclusão bem sucedida.")
@@ -135,6 +125,15 @@ function User() {
         })
     }
   }
+  const defineCategoria = nomeCat =>{
+    for (var i = 0; i < cor.length; i++) {
+      console.log(nomeCat);
+      console.log(cor[i].descricao);
+        if (nomeCat == cor[i].descricao) {
+            return cor[i].cat_id_categoria
+        }
+    }
+}
 
   const handleInput = event => {
     const { name, value } = event.target;
@@ -144,12 +143,22 @@ function User() {
   const toggle = () => { setModal(!modal) };
 
   const atualizarPublicacao = () => {
-    ServerRest.updatePublicacao(materialPublicado.idmaterial_publicado, materialPublicado)
+    const material = {
+      prd_id_produto: materialPublicado.prd_id_produto,
+      titulo: materialPublicado.titulo,
+      descricao: materialPublicado.descricao,
+      quantidade: materialPublicado.quantidade,
+      preco: materialPublicado.preco,
+      categoria: { cat_id_categoria: defineCategoria(materialPublicado.categoria) },
+      usuario: {usr_id_usuario: JSON.parse(localStorage.getItem('dados')).usr_id_usuario}
+    }
+    console.log(material);
+    ServerRest.updatePublicacao(material)
       .then(response => {
         obterUsuario()
         window.alert("Material alterado com sucesso!")
         toggle()
-        atualizarPublish(materialPublicado)
+        atualizarPublish(material)
       })
       .catch(e => {
         window.alert("Erro ao atualizar o material.")
@@ -173,10 +182,10 @@ function User() {
                     />
                   </Col>
                   <Col xl="9" md="9" sm="8" className="text-left">
-                    <h5>{usuario.pessoa.nome}</h5>
+                    <h5>{pessoa.nome}</h5>
                     <p>{usuario.email}</p>
                     <p className="description">
-                      {usuario.pessoa.endereco}
+                      {pessoa.endereco}
                     </p>
                   </Col>
                 </Row>
@@ -188,52 +197,54 @@ function User() {
           <Col md="12">
             <h2 className="m-5">Produtos publicados</h2>
           </Col>
-          {/* {listaPublicacoes && listaPublicacoes.map((item) => (
+          {listaPublicacoes && listaPublicacoes.map((item) => (
             <Col lg="4" md="6" sm="6">
               <Card className="card-stats">
-              <Link to={`/admin/published/${item.idmaterial_publicado}`} style={{ textDecoration: 'none' }}>
                 <CardBody>
+                  <Link to={`/admin/published/${item.prd_id_produto}`} style={{ textDecoration: 'none' }}>
+                    <Row>
+                      <Col sm="5" md="5" xs="5" >
+                        <p className="title">{item.titulo}</p>
+                        <div className="t">
+                        </div>
+                      </Col>
+                      <Col sm="3" md="3" lg="3" className="col-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" color={pegarCor(item)} fill="currentColor" class="bi bi-tags-fill" viewBox="0 0 16 16">
+                          <path d="M2 2a1 1 0 0 1 1-1h4.586a1 1 0 0 1 .707.293l7 7a1 1 0 0 1 0 1.414l-4.586 4.586a1 1 0 0 1-1.414 0l-7-7A1 1 0 0 1 2 6.586V2zm3.5 4a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z" />
+                          <path d="M1.293 7.793A1 1 0 0 1 1 7.086V2a1 1 0 0 0-1 1v4.586a1 1 0 0 0 .293.707l7 7a1 1 0 0 0 1.414 0l.043-.043-7.457-7.457z" />
+                        </svg>
+                      </Col>
+
+                    </Row>
+                  </Link>
                   <Row>
-                    <Col sm="4" md="4" xs="4">
-                      <img className="img-public" src={item.imgURL}></img>
-                    </Col>
-                    <Col sm="5" md="5" xs="5" >
-                      <p className="title">{item.titulo}</p>
-                      <div className="t">
-                        <Button color="success"
-                          className="btn-sm b"
-                          onClick={() => {
-                            toggle()
-                            setMaterialPublicado(item)
-                          }}>
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
-                            <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z" />
-                          </svg>
-                        </Button>
+                    <Col>
+                      <Button color="success"
+                        className="btn-sm b"
+                        onClick={() => {
+                          toggle()
+                          setMaterialPublicado(item)
+                        }}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
+                          <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z" />
+                        </svg>
+                      </Button>
 
-                        <Button color="danger"
-                          className="btn-sm b"
-                          onClick={() => { removerPublicacao(item) }}>
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
-                            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z" />
-                            <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z" />
-                          </svg>
-                        </Button>
-                      </div>
+                      <Button color="danger"
+                        className="btn-sm b"
+                        onClick={() => { removerPublicacao(item) }}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                          <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z" />
+                          <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z" />
+                        </svg>
+                      </Button>
                     </Col>
-                    <Col sm="3" md="3" lg="3" className="col-1">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" color={pegarCor(item)} fill="currentColor" class="bi bi-tags-fill" viewBox="0 0 16 16">
-                        <path d="M2 2a1 1 0 0 1 1-1h4.586a1 1 0 0 1 .707.293l7 7a1 1 0 0 1 0 1.414l-4.586 4.586a1 1 0 0 1-1.414 0l-7-7A1 1 0 0 1 2 6.586V2zm3.5 4a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z" />
-                        <path d="M1.293 7.793A1 1 0 0 1 1 7.086V2a1 1 0 0 0-1 1v4.586a1 1 0 0 0 .293.707l7 7a1 1 0 0 0 1.414 0l.043-.043-7.457-7.457z" />
-                      </svg>
-                    </Col>
-
                   </Row>
                 </CardBody>
-                </Link>
+                
               </Card>
             </Col>
-          ))} */}
+          ))}
         </Row>
         {/*------------ Modal ----------*/}
         <div>
@@ -250,21 +261,27 @@ function User() {
                   <Input type="text" value={materialPublicado.descricao} name="descricao" id="descricao" onChange={handleInput} />
                 </FormGroup>
                 <FormGroup>
-                  <Label for="telefone">Telefone</Label>
-                  <Input type="tel" value={materialPublicado.telefone} name="telefone" id="telefone" onChange={handleInput}
+                  <Label for="preco">Preço</Label>
+                  <Input type="text" value={materialPublicado.preco} name="preco" id="preco" onChange={handleInput}
                     onBlur={() => { console.log(materialPublicado) }} />
                 </FormGroup>
                 <FormGroup>
-                  <Label for="exampleSelect">Status</Label>
-                  <Input type="select" name="status" id="exampleSelect" defaultValue={materialPublicado.status}
-                    onChange={handleInput}>
-                    <option value="1">Publicado</option>
-                    <option value="0">Não publicado</option>
-                  </Input>
+                  <Label for="quantidade">Quantidade</Label>
+                  <Input type="text" value={materialPublicado.quantidade} name="quantidade" id="quantidade" onChange={handleInput}
+                    onBlur={() => { console.log(materialPublicado) }} />
                 </FormGroup>
                 <FormGroup>
-                  <Label for="data">Data</Label>
-                  <Input type="date" value={materialPublicado.data} name="data" id="data" onChange={handleInput} />
+                  <Label for="exampleSelect">Categoria</Label>
+                  <Input type="select" name="categoria" id="exampleSelect"
+                    onChange={handleInput}>
+                      <option>Selecione a categoria</option>
+                      {
+                          cor && cor.map(item =>(
+                              <option>{item.descricao}</option>
+                          ))
+                          
+                      }
+                  </Input>
                 </FormGroup>
               </Form>
             </ModalBody>

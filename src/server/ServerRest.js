@@ -16,8 +16,8 @@ const createPublicacao = data => {
 };
 
 //Atualizar Publicação
-const updatePublicacao = (id, data) => {
-    return http.put(`/produto/criar`, data);
+const updatePublicacao = (data) => {
+    return http.post(`/produto/criar`, data);
 };
 //Remover Publicação
 const removePublicacao = id => {
@@ -33,10 +33,16 @@ const getAllUsuarios = () => {
 const getUsuarios = id => {
     return http.get(`/usuario/${id}`);
 };
-
+const getListaProdutos = id => {
+    return http.get(`/usuario/listaProdutos/${id}`);
+};
 //Criar Usuario
 const createUsuarios = data => {
     return http.post("/usuario/criar", data);
+};
+
+const createPessoa = data => {
+    return http.post("/pessoa/criar", data);
 };
 
 const loginUsuarios = data => {
@@ -100,6 +106,6 @@ export default {
     createInteressado,
     getUsuarioInteressado,
     deleteInteressado,
-    loginUsuarios,
+    loginUsuarios,getListaProdutos,createPessoa,
 
 };
